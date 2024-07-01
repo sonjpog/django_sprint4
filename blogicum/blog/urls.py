@@ -14,8 +14,12 @@ urlpatterns = [
 # URL-шаблоны для постов
 posts_urls = [
     path('create/', views.PostCreateView.as_view(), name='create_post'),
-    path('<int:post_id>/edit/', views.PostUpdateView.as_view(), name='edit_post'),
-    path('<int:post_id>/delete/', views.PostDeleteView.as_view(), name='delete_post'),
+    path(
+        '<int:post_id>/edit/', views.PostUpdateView.as_view(), name='edit_post'
+    ),
+    path(
+        '<int:post_id>/delete/', views.PostDeleteView.as_view(), name='delete_post'
+    ),
     path('<int:post_id>/', views.PostDetailView.as_view(), name='post_detail'),
 ]
 
@@ -32,7 +36,9 @@ comments_urls = [
 # URL-шаблоны для профиля
 profile_urls = [
     path('edit/', views.EditProfileUpdateView.as_view(), name='edit_profile'),
-    path('<str:username>/', views.ProfilePostListView.as_view(), name='profile'),
+    path(
+        '<str:username>/', views.ProfilePostListView.as_view(), name='profile'
+    ),
 ]
 
 # Добавление всех URL-шаблонов в urlpatterns
