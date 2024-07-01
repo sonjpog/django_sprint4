@@ -87,7 +87,7 @@ class Post(PublishedModel):
 
     def __str__(self):
         return self.title[:settings.REPRESENTATION_LENGTH]
-    
+
 
 class Comment(PublishedModel):
     text = models.TextField(

@@ -4,7 +4,7 @@ from . import views
 
 app_name = 'blog'
 
-# Подглядела то, что можно группировать ссылки, поэтому сразу сделала так. 
+# Подглядела то, что можно группировать ссылки, поэтому сразу сделала так.
 urlpatterns: list = [
     path('', views.PostListView.as_view(), name='index'),
     path(
