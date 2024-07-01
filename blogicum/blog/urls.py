@@ -18,7 +18,7 @@ posts_urls = [
         '<int:post_id>/edit/', views.PostUpdateView.as_view(), name='edit_post'
     ),
     path(
-        '<int:post_id>/delete/', views.PostDeleteView.as_view(), 
+        '<int:post_id>/delete/', views.PostDeleteView.as_view(),
         name='delete_post'
     ),
     path('<int:post_id>/', views.PostDetailView.as_view(), name='post_detail'),
