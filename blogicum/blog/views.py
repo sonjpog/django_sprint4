@@ -4,42 +4,18 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Count
 from django.db.models.query import QuerySet
 from django.http import Http404
-from django.http.response import HttpResponse
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.utils import timezone
 from django.views.generic import (
     CreateView, DeleteView, DetailView, ListView, UpdateView
 )
 
+from .constants import PAGINATE_COUNT
 from .forms import CommentForm, PostForm
+from .mixins import EditContentMixin
 from .models import Category, Comment, Post, User
-
-PAGINATE_COUNT: int = 10
-
-
-def get_general_posts_filter():
-    return Post.objects.select_related(
-        'author',
-        'location',
-        'category',
-    ).filter(
-        pub_date__lte=timezone.now(),
-        is_published=True,
-        category__is_published=True,
-    ).annotate(
-        comment_count=Count('comments')
-    ).order_by('-pub_date')
-
-
-class EditContentMixin(LoginRequiredMixin):
-    def dispatch(self, request, *args, **kwargs) -> HttpResponse:
-        if self.get_object().author != request.user:
-            return redirect(
-                'blog:post_detail',
-                post_id=self.kwargs['post_id']
-            )
-        return super().dispatch(request, *args, **kwargs)
+from .service import get_general_posts_filter
 
 
 class ValidationMixin:
@@ -103,13 +79,18 @@ class PostDetailView(PostMixin, DetailView):
         )
 
     def get_object(self, queryset=None):
-        post = super().get_object(queryset)
+        post = get_object_or_404(
+            Post.objects.select_related('author', 'location', 'category'),
+            pk=self.kwargs.get(self.pk_url_kwarg),
+        )
+
         if post.author != self.request.user and (
-            post.is_published is False
-            or post.category.is_published is False
+            not post.is_published
+            or not post.category.is_published
             or post.pub_date > timezone.now()
         ):
             raise Http404
+
         return post
 
     def get_context_data(self, **kwargs) -> Dict[str, Any]:
@@ -125,17 +106,14 @@ class CategoryListView(PostListMixin, ListView):
     template_name = 'blog/category.html'
 
     def get_queryset(self) -> QuerySet[Any]:
-        return get_general_posts_filter().filter(
-            category__slug=self.kwargs['category_slug'],
-        )
+        category = get_object_or_404(
+            Category, slug=self.kwargs['category_slug'], is_published=True)
+        return get_general_posts_filter().filter(category=category)
 
     def get_context_data(self, **kwargs) -> Dict[str, Any]:
         context = super().get_context_data(**kwargs)
         context['category'] = get_object_or_404(
-            Category,
-            is_published=True,
-            slug=self.kwargs['category_slug'],
-        )
+            Category, slug=self.kwargs['category_slug'], is_published=True)
         return context
 
 
@@ -154,7 +132,6 @@ class PostUpdateView(
     EditContentMixin,
     PostFormMixin,
     PostIdCreateMixin,
-    ValidationMixin,
     RedirectionPostMixin,
     UpdateView,
 ):
@@ -183,15 +160,32 @@ class ProfilePostListView(PostListMixin, ListView):
             User,
             username=self.kwargs['username']
         )
-        return Post.objects.select_related(
-            'author',
-            'location',
-            'category',
-        ).filter(
-            author=self.author
-        ).annotate(
-            comment_count=Count('comments')
-        ).order_by('-pub_date')
+
+        if self.request.user == self.author:
+            # Если текущий пользователь является владельцем страницы профиля
+            queryset = Post.objects.select_related(
+                'author',
+                'location',
+                'category',
+            ).filter(
+                author=self.author
+            ).annotate(
+                comment_count=Count('comments')
+            ).order_by('-pub_date')
+        else:
+            queryset = Post.objects.select_related(
+                'author',
+                'location',
+                'category',
+            ).filter(
+                author=self.author,
+                is_published=True,
+                pub_date__lte=timezone.now()
+            ).annotate(
+                comment_count=Count('comments')
+            ).order_by('-pub_date')
+
+        return queryset
 
     def get_context_data(self, **kwargs) -> Dict[str, Any]:
         context = super().get_context_data(**kwargs)

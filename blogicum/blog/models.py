@@ -1,6 +1,9 @@
 from django.db import models
-from django.conf import settings
+from django.urls import reverse
 from django.contrib.auth import get_user_model
+
+from . import constants
+
 
 User = get_user_model()
 
@@ -20,22 +23,23 @@ class PublishedModel(models.Model):
 
 class Location(PublishedModel):
     name = models.CharField(
-        'Название места', max_length=settings.MAX_FIELD_LENGTH)
+        'Название места', max_length=constants.MAX_FIELD_LENGTH)
 
     class Meta(PublishedModel.Meta):
         verbose_name = 'местоположение'
         verbose_name_plural = 'Местоположения'
 
     def __str__(self) -> str:
-        return self.name[:settings.REPRESENTATION_LENGTH]
+        return self.name[:constants.REPRESENTATION_LENGTH]
 
 
 class Category(PublishedModel):
-    title = models.CharField('Заголовок', max_length=settings.MAX_FIELD_LENGTH)
+    title = models.CharField(
+        'Заголовок', max_length=constants.MAX_FIELD_LENGTH)
     description = models.TextField('Описание')
     slug = models.SlugField(
         'Идентификатор',
-        max_length=settings.MAX_FIELD_LENGTH,
+        max_length=constants.MAX_FIELD_LENGTH,
         unique=True,
         help_text=(
             'Идентификатор страницы для URL; '
@@ -49,11 +53,12 @@ class Category(PublishedModel):
         verbose_name_plural = 'Категории'
 
     def __str__(self) -> str:
-        return self.title[:settings.REPRESENTATION_LENGTH]
+        return self.title[:constants.REPRESENTATION_LENGTH]
 
 
 class Post(PublishedModel):
-    title = models.CharField('Заголовок', max_length=settings.MAX_FIELD_LENGTH)
+    title = models.CharField(
+        'Заголовок', max_length=constants.MAX_FIELD_LENGTH)
     text = models.TextField('Текст')
     pub_date = models.DateTimeField(
         'Дата и время публикации',
@@ -86,7 +91,10 @@ class Post(PublishedModel):
         ordering = ('-pub_date', ) + PublishedModel.Meta.ordering
 
     def __str__(self):
-        return self.title[:settings.REPRESENTATION_LENGTH]
+        return self.title[:constants.REPRESENTATION_LENGTH]
+
+    def get_absolute_url(self):
+        return reverse('post_detail', args=[str(self.id)])
 
 
 class Comment(PublishedModel):
@@ -96,6 +104,7 @@ class Comment(PublishedModel):
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
+        related_name='author_comments',
     )
     post = models.ForeignKey(
         Post,
@@ -106,7 +115,6 @@ class Comment(PublishedModel):
     class Meta:
         verbose_name = 'комментарий'
         verbose_name_plural = 'Комментарии'
-        ordering = ('created_at',)
 
     def __str__(self) -> str:
-        return f'{self.author}: {self.text[:50]}'
+        return f'{self.author}: {self.text[:constants.COMMENT_PREVIEW_LENGTH]}'

@@ -8,6 +8,7 @@ class PostInLine(admin.TabularInline):
     extra = 0
 
 
+@admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
     inlines = (PostInLine,)
     list_display = (
@@ -19,6 +20,7 @@ class CategoryAdmin(admin.ModelAdmin):
     search_fields = ('title',)
 
 
+@admin.register(Comment)
 class CommentAdmin(admin.ModelAdmin):
     list_display = (
         'created_at',
@@ -30,6 +32,7 @@ class CommentAdmin(admin.ModelAdmin):
     list_filter = ('is_published',)
 
 
+@admin.register(Location)
 class LocationAdmin(admin.ModelAdmin):
     inlines = (PostInLine,)
     list_display = (
@@ -40,6 +43,7 @@ class LocationAdmin(admin.ModelAdmin):
     search_fields = ('name',)
 
 
+@admin.register(Post)
 class PostAdmin(admin.ModelAdmin):
     search_fields = ('text',)
     list_display = ('id', 'title', 'author', 'text', 'category',
@@ -48,9 +52,3 @@ class PostAdmin(admin.ModelAdmin):
     list_editable = ('category', 'is_published', 'location')
     list_filter = ('created_at',)
     empty_value_display = '-пусто-'
-
-
-admin.site.register(Category, CategoryAdmin)
-admin.site.register(Comment, CommentAdmin)
-admin.site.register(Location, LocationAdmin)
-admin.site.register(Post, PostAdmin)
