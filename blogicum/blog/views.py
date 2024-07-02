@@ -2,7 +2,6 @@ from typing import Any, Dict
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models.query import QuerySet
-from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.views.generic import (
@@ -37,7 +36,8 @@ class PostDetailView(mixins.PostMixin, DetailView):
         post = super().get_object(queryset=queryset)
         if post.author != self.request.user:
             return get_object_or_404(
-                get_general_posts_filter().select_related('author', 'location', 'category'),
+                get_general_posts_filter().select_related('author', 'location',
+                                                          'category'),
                 is_published=True,
                 category__is_published=True,
                 pub_date__lte=timezone.now(),

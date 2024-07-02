@@ -105,7 +105,7 @@ class Comment(PublishedModel):
         User,
         on_delete=models.CASCADE,
         related_name='comments',
-        # Поменяла! Но, разве ниже мы не дублируем ForeignKey в 
+        # Поменяла! Но, разве ниже мы не дублируем ForeignKey в
         # одной и той же модели?
     )
     post = models.ForeignKey(
