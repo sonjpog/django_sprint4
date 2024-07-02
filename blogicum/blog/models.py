@@ -1,6 +1,6 @@
+from django.contrib.auth import get_user_model
 from django.db import models
 from django.urls import reverse
-from django.contrib.auth import get_user_model
 
 from . import constants
 
@@ -94,7 +94,7 @@ class Post(PublishedModel):
         return self.title[:constants.REPRESENTATION_LENGTH]
 
     def get_absolute_url(self):
-        return reverse('post_detail', args=[str(self.id)])
+        return reverse('post_detail', args=self.id)
 
 
 class Comment(PublishedModel):
@@ -104,17 +104,20 @@ class Comment(PublishedModel):
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='author_comments',
+        related_name='comments',
+        # Поменяла! Но, разве ниже мы не дублируем ForeignKey в 
+        # одной и той же модели?
     )
     post = models.ForeignKey(
         Post,
         on_delete=models.CASCADE,
-        related_name='comments',
+        related_name='comments',  # Вот тут.
     )
 
-    class Meta:
+    class Meta(PublishedModel.Meta):
         verbose_name = 'комментарий'
         verbose_name_plural = 'Комментарии'
+        ordering = PublishedModel.Meta.ordering
 
     def __str__(self) -> str:
         return f'{self.author}: {self.text[:constants.COMMENT_PREVIEW_LENGTH]}'
