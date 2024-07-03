@@ -94,7 +94,7 @@ class Post(PublishedModel):
         return self.title[:constants.REPRESENTATION_LENGTH]
 
     def get_absolute_url(self):
-        return reverse('post_detail', args=self.id)
+        return reverse('post_detail', args=(self.id,))
 
 
 class Comment(PublishedModel):
@@ -105,8 +105,6 @@ class Comment(PublishedModel):
         User,
         on_delete=models.CASCADE,
         related_name='comments',
-        # Поменяла! Но, разве ниже мы не дублируем ForeignKey в
-        # одной и той же модели?
     )
     post = models.ForeignKey(
         Post,
@@ -117,7 +115,6 @@ class Comment(PublishedModel):
     class Meta(PublishedModel.Meta):
         verbose_name = 'комментарий'
         verbose_name_plural = 'Комментарии'
-        ordering = PublishedModel.Meta.ordering
 
     def __str__(self) -> str:
         return f'{self.author}: {self.text[:constants.COMMENT_PREVIEW_LENGTH]}'

@@ -3,7 +3,6 @@ from typing import Any, Dict
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models.query import QuerySet
 from django.shortcuts import get_object_or_404
-from django.utils import timezone
 from django.views.generic import (
     CreateView, DeleteView, DetailView, ListView, UpdateView
 )
@@ -35,14 +34,9 @@ class PostDetailView(mixins.PostMixin, DetailView):
     def get_object(self, queryset=None):
         post = super().get_object(queryset=queryset)
         if post.author != self.request.user:
-            return get_object_or_404(
-                get_general_posts_filter().select_related('author', 'location',
-                                                          'category'),
-                is_published=True,
-                category__is_published=True,
-                pub_date__lte=timezone.now(),
-                pk=self.kwargs.get(self.pk_url_kwarg)
-            )
+            return get_object_or_404(get_general_posts_filter(),
+                                     pk=self.kwargs.get(self.pk_url_kwarg)
+                                     )
         return post
 
     def get_context_data(self, **kwargs) -> Dict[str, Any]:
@@ -115,18 +109,15 @@ class ProfilePostListView(mixins.PostListMixin, ListView):
             username=self.kwargs['username']
         )
 
-        queryset = Post.objects.select_related(
-            'author',
-            'location',
-            'category',
-        ).filter(
-            author=self.author
-        )
-
         apply_filters = self.request.user != self.author
-
-        return get_general_posts_filter(queryset=queryset,
-                                        apply_filters=apply_filters)
+        return get_general_posts_filter(
+            queryset=self.author.posts.select_related(
+                'author',
+                'location',
+                'category',
+            ),
+            apply_filters=apply_filters
+        )
 
     def get_context_data(self, **kwargs) -> Dict[str, Any]:
         context = super().get_context_data(**kwargs)
